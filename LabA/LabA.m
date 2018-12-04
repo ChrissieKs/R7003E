@@ -47,7 +47,7 @@ Bd = [ 0 0 ; b_21 b_22 ; 0 0 ; b_41 b_42 ];  %try to prove this in 3.6.1
 s = tf('s')
 sys  = ss(A,B,C,D) %state space
 poles = pole(sys) % 4 poles, 1-2(?) unstable
-zeros = zero(sys) %2 zeros at z = 0;
+zerosG = zero(sys) %2 zeros at z = 0;
 G = s^2/(s*(s-poles(1))*(s-poles(2))*(s-poles(3)))
 [a,b,gain] = ss2zp(A,B,C,D,1) %with gain from here
 G = G*-90 %-90 = gain...
@@ -65,12 +65,23 @@ p1 = poles(1)
 p2 = poles(2)
 p3 = poles(3) %den instabila polen :( 
 
-p3_new = -2;     %can change this value for different poles! will probably be unstable when far away from orignial pole?! 
-%enligt eq (58)
-p = (p1*p3_new+p2*p3_new-p1*p3-p2*p3)/gain
-i = (p1*p2*p3-p1*p2*p3_new)/gain
-d = (p3-p3_new)/gain
+%choose new poles here!
+p2_new = p2;
+p3_new = p2;    
 
+%can change this value for different poles! will probably be unstable when far away from orignial pole?! 
+%enligt eq (58)
+%To change 1 POLE, use this!
+%p = (p1*p3_new+p2*p3_new-p1*p3-p2*p3)/gain 
+%i = (p1*p2*p3-p1*p2*p3_new)/gain
+%d = (p3-p3_new)/gain
+
+%to change 2 POLES use this!
+
+p =(p1*p2_new-p1*p2+p1*p3_new-p1*p3+p2_new*p3_new-p2*p3)/gain 
+i = (p1*p2*p3-p1*p2_new*p3_new)/gain
+d = (p3-p3_new+p2-p2_new)/gain
+d_temp = d;
 
 %new TF 
 %pidC = 
@@ -119,6 +130,7 @@ Gclpid = feedback(G,pidid) %feedback with PI-controller
 PID_poles = pole(Gclpid)
 PID_zeros=zero(Gclpid)
 impulse(Gclpid)
+title('Impulse Response for PID Closed loop system')
 %rlocus(G*pidid)
 
 
@@ -127,14 +139,14 @@ impulse(Gclpid)
 %%
 %3.4.1 COPY PASTAD NOT IN USE
 %s(s-a22)(s^2-s*a44-a42) roots for TF
-clc
-poles = [0 a_22 a_44/2+sqrt(a_44^2/4+a_42) a_44/2-sqrt(a_44^2/4+a_42)]
-zeros = [ 0 a_22 B(4)]
+%clc
+%poles = [0 a_22 a_44/2+sqrt(a_44^2/4+a_42) a_44/2-sqrt(a_44^2/4+a_42)]
+%zeros = [ 0 a_22 B(4)]
 %ppoles doesn't seem to match with solutions..
 
-tLinearizedBot = ss(A, B, C, 0)
-[tLinearizedBotNumerator, tLinearizedBotDenominator] = ss2tf(A, B, C, 0, 1) 
-[afLinearizedBotZeros, afLinearizedBotPoles, fLinearizedBotGain] = ss2zp(A, B, C, 0, 1)
+%tLinearizedBot = ss(A, B, C, 0)
+%[tLinearizedBotNumerator, tLinearizedBotDenominator] = ss2tf(A, B, C, 0, 1) 
+%[afLinearizedBotZeros, afLinearizedBotPoles, fLinearizedBotGain] = ss2zp(A, B, C, 0, 1)
 
 
 %%
@@ -159,18 +171,137 @@ print('-depsc2', '-r300', 'poles_zeros_map_of_linearized_balancing_robot.eps');
 
 %%
 %task 3.7.1
-
-
+%syms z
+%f = 6*4;
+%T = 1/f;
+%pididZ = p+i*T*z/(z-1)^2+d*(z-1)/z  %högst oklart
+%sysDd = c2d(pidid/s,T,'zoh')            %högst oklart...
 
 
 
 C = eye(4)
- D= zeros(2,1)
+ D= zeros(4,2)
+%%
+%plotting stuff
+name = ('task_3_7')
+open_system('C:\Users\OscarBäckman\Documents\MATLAB\Reglerteknik\task_3_7'); 
+saveas(get_param(name,'Handle'),'task_3_7.pdf');
+sim(name);
+close_system(name);
+
+afFigurePosition = [1 1 10 6];
+figure(1) 
+plot(x_w.time, x_w.signals.values); 
+title('x_w'); xlabel('time');
+ylabel('meters')
+set(gcf, 'units', 'centimeters'); 
+set(gcf,'Position',afFigurePosition); 
+set(gcf, 'PaperPositionMode', 'auto');
+print('-depsc2', '-r300', 'Task_3_7_x_w.eps');
+
+figure(2)
+plot(theta_b.time, theta_b.signals.values * 180 / pi);
+title('\theta_b');
+xlabel('time');
+ylabel('degrees')
+
+set(gcf, 'Units', 'centimeters');
+set(gcf,'Position',afFigurePosition);
+set(gcf, 'PaperPositionMode', 'auto');
+print('-depsc2', '-r300', 'Task_3_7_theta_b.eps');
+
+figure(3) 
+plot(d.time, d.signals.values);
+title('d'); 
+xlabel('time');
+ylabel('Newton')
+set(gcf, 'Units', 'centimeters');
+set(gcf,'Position',afFigurePosition);
+set(gcf, 'PaperPositionMode', 'auto');
+print('-depsc2', '-r300', 'Task_3_7_d.eps');
+
+figure(4)
+plot(v_m.time, v_m.signals.values); 
+title('v_m');
+xlabel('time');
+ylabel('Volt') 
+set(gcf, 'Units', 'centimeters'); 
+set(gcf,'Position',afFigurePosition); 
+set(gcf, 'PaperPositionMode', 'auto');
+print('-depsc2', '-r300', 'Task_3_7_v_m.eps'); 
 
 
 %%
 %task 3.8.1
-bode(Gclpid*s) %ehm?
+bode(G) % this? %wmax = 5.9
+f3db = 2.2282;
+f_sample = f3db*25;
+T = 1/f_sample
+%bode(Gclpid)
+%f = 10; %sampling rate
+%T = 1/f;
+%sysDd = c2d(Gclpid,T,'zoh')
 
+
+%bode(Gclpid*s) %ehm?
+
+%%
+%spara från simunlink saker för task 3.8.1
+
+
+name = ('task_3_8_b')
+open_system('C:\Users\OscarBäckman\Documents\MATLAB\Reglerteknik\task_3_8_b'); 
+saveas(get_param(name,'Handle'),'task_3_8_b.pdf');
+sim(name);
+%close_system(name);
+
+afFigurePosition = [1 1 10 6];
+
+figure(2)
+plot(theta_b.time, theta_b.signals.values * 180 / pi);
+title('\theta_b');
+xlabel('time');
+ylabel('degrees')
+legend({'?_b','lin:?_b'},'Location','northwest')
+print('-depsc2', '-r300', 'Task_3_8_continous_theta_b.eps'); 
+
+
+figure(4)
+plot(v_m.time, v_m.signals.values); 
+title('v_m');
+xlabel('time');
+ylabel('Volt') 
+set(gcf, 'Units', 'centimeters'); 
+set(gcf,'Position',afFigurePosition); 
+set(gcf, 'PaperPositionMode', 'auto');
+legend({'v_m','lin:v_m'},'Location','northwest')
+print('-depsc2', '-r300', 'Task_3_8_continous_v_m.eps'); 
+%%
+name = ('task_3_8_discreate');
+
+open_system('C:\Users\OscarBäckman\Documents\MATLAB\Reglerteknik\task_3_8_b'); 
+saveas(get_param(name,'Handle'),'task_3_8_dicreate.pdf');
+sim(name);
+afFigurePosition = [1 1 10 6];
+
+figure(2)
+plot(theta_b.time, theta_b.signals.values * 180 / pi);
+title('\theta_b');
+xlabel('time');
+ylabel('degrees')
+legend({'?_b','lin:?_b'},'Location','northwest')
+print('-depsc2', '-r300', 'Task_3_8_discreate_theta_b.eps'); 
+
+
+figure(4)
+plot(v_m.time, v_m.signals.values); 
+title('v_m');
+xlabel('time');
+ylabel('Volt') 
+set(gcf, 'Units', 'centimeters'); 
+set(gcf,'Position',afFigurePosition); 
+set(gcf, 'PaperPositionMode', 'auto');
+legend({'v_m','lin:v_m'},'Location','northwest')
+print('-depsc2', '-r300', 'Task_3_8_discreate_v_m.eps'); 
 
 
