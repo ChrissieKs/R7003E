@@ -20,16 +20,6 @@ desiredPoles = [currentPoles(2) currentPoles(4) -2 -3]
 
 %adding a feedback K
 
-
-%syms v K1 K2 K3 K4 b1 b2 b3 b4   %Överger standard sättet för ackerman!
-%Asym =sym('a',[4,4])
-%Ksym = [K1 K2 K3 K4]
-%Bsym = [b1; b2; b3; b4]
-%Adet = (Asym-Bsym*Ksym)
-%Acl = v*eye(size(A))-(A-B*K)
-%Adet = det(Acl) 
-
-
 %K = [0 0 0 1];
 
 K = acker(A,B,desiredPoles)
