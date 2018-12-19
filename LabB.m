@@ -15,10 +15,22 @@ rankobs = rank(obs)
 clc
 
 currentPoles = pole(G) %Move integrator and the positive pole %This is TF, might lose some poles/zeros doing like this, CAREFUL
-desiredPoles = [currentPoles(2) currentPoles(4) -2 -3]
+%desiredPoles = [currentPoles(2) -10 -15 -20] Theese work for
+%reduced....not full though...
+desiredPoles = [currentPoles(2) -4.99 -5.0 -5.01]  %high K!
 
-
+%desiredPoles = [-4 currentPoles(2) -4.01 -4.02] 
 %adding a feedback K
+
+
+%syms v K1 K2 K3 K4 b1 b2 b3 b4   %Överger standard sättet för ackerman!
+%Asym =sym('a',[4,4])
+%Ksym = [K1 K2 K3 K4]
+%Bsym = [b1; b2; b3; b4]
+%Adet = (Asym-Bsym*Ksym)
+%Acl = v*eye(size(A))-(A-B*K)
+%Adet = det(Acl) 
+
 
 %K = [0 0 0 1];
 
@@ -26,9 +38,10 @@ K = acker(A,B,desiredPoles)
 disp('from sol')
 disp([ -10.0000  -57.4908 -105.0371  -19.5009 ])
 
+afSortedRoots  = desiredPoles   %OTHER ROOTS!
 %%
 %task 4.7
-C1 = [8 1 9 3] %try to find some good roots from here
+C1 = [5 1 9 3] %try to find some good roots from here
 
 [num den] = ss2tf(A,B,C1,D,1)  %new tf due to new C...
  %[z,p,gain ]  = ss2zp(A, B, C1, D, 1) %find all the zeros/poles!
@@ -41,13 +54,14 @@ Ns =num(1)*s^4+num(2)*s^3+num(3)*s^2+num(4)*s+num(5)
 
 Dsmin = den(1)*s^4-den(2)*s^3+den(3)*s^2-den(4)*s+den(5)
 Nsmin = num(1)*s^4-num(2)*s^3+num(3)*s^2-num(4)*s+num(5)
-%rlocus(Ns*Nsmin/(Ds*Dsmin))
-%axis([-10 10 -5 5])
+
+rlocus(Ns*Nsmin/(Ds*Dsmin))
+axis([-10 10 -5 5])
 
 %more task 4.7
 %acker osv
 %clc
-rho = 5;   %choose from inspection earlier!
+rho =1;   %choose from inspection earlier!
 
 % compute the roots of the SRL equation 
 afUnsortedAllRoots = rlocus( Ns*Nsmin/(Ds*Dsmin), rho );
@@ -63,18 +77,19 @@ min(afSortedRoots)
 %task 4.8
 %full lueberge
 C= [1 0 0 0;0 0 1 0];
-L = (place(A',C',2*afSortedRoots))'
-%%
+L = (place(A',C',3*afSortedRoots))'
+%% task 4.8 reduced Luberger
 
-%task 4.8 reduced Luberger
+%
 clc
 Cacc = [1 0 0 0];
 CNacc = [0 0 1 0];
 
-Vacc = [0 1 0 0;0 0 0 1];
+%Vacc = [0 1 0 0;0 0 0 1];
 %VNacc = [1 0 0 0;0 1 0 0;0 0 0 1];
+Vacc = [0 1 0 0;0 0 1 0;0 0 0 1];
 
-invT = [Cacc;CNacc;Vacc]
+invT = [Cacc;Vacc]
 %invTN = [CNacc;VNacc]
 T = inv(invT)
 %New basis 1, New sys
@@ -87,8 +102,8 @@ BSx = BS(2:4)
 
 CSacc =  Cacc*T
 CSNacc = CNacc*T
-Cy =CSNacc(1:1)
-Cx = CSNacc(2:4)
+Cy =CSNacc(1:1) %hm...
+Cx = CSNacc(2:4) %HM!
 
 Ayy =AS(1:1,1:1)
 Ayx =AS(1,2:4)
@@ -115,36 +130,31 @@ M7 = T(1:4,2:4)   %only intrested in the xx part???
 %%
 %task 4.9
 clc
-fSamplingPeriod = 0.01;
+freq = 200;
+fSamplingPeriod = 1/freq;
 sys = ss(A,B,C,D)
 sys_d = c2d(sys,fSamplingPeriod,'zoh') %sys is sys = ss(A,B,C,D) :) 
 [Ad Bd Cd Dd] = ssdata(sys_d)   
 %pole(sys_d)
 poles_d = exp(afSortedRoots.*fSamplingPeriod)
-poles_d_Ld = exp(afSortedRoots.*fSamplingPeriod*3)
+poles_d_Ld = exp(afSortedRoots.*fSamplingPeriod*5)
 Cd = [1 0 0 0;0 0 1 0]
+
 Kd = place(Ad, Bd, poles_d)
 Ld = (place(Ad',Cd',poles_d_Ld))'
+
 
 
 %see LabB_ObserverOverSimulator_Discrete_Parameters.m 
 % :P 
 
-%more task 4.7
-%acker osv
-%clc
-rho = 10;   %choose from inspection earlier!
 
-% compute the roots of the SRL equation 
-afUnsortedAllRoots = rlocus( Ns*Nsmin/(Ds*Dsmin), rho );
-[~, aiSortingIndexes] = sort( real(afUnsortedAllRoots) );
-afSortedAllRoots = afUnsortedAllRoots(aiSortingIndexes);
-afSortedRoots = afSortedAllRoots(1:4)
-% compute the gains matrix for the controller K = acker(A, B, afSortedRoots);
 
-% compute the gains matrix for the controller 
-%Kd = place(Ad, Bd, afSortedRoots)
-min(afSortedRoots)
+
+
+%%
+%testa some copy pasta från tidigare!
+
 
 %%
 %W = C1' * C1;
@@ -158,12 +168,12 @@ C= [1 0 0 0;0 0 1 0];
 
 
 Caccd = [1 0 0 0];
-CNaccd = [0 0 1 0];
+CNaccd = [0 0 1 0]; 
 
-Vaccd = [0 1 0 0;0 0 0 1];
+Vaccd = [0 1 0 0;0 0 1 0;0 0 0 1]; 
 %VNacc = [1 0 0 0;0 1 0 0;0 0 0 1];
 
-invTd = [Caccd;CNaccd;Vaccd]
+invTd = [Caccd;Vaccd]
 %invTN = [CNacc;VNacc]
 Td = inv(invTd)
 %New basis 1, New sys
@@ -185,8 +195,9 @@ Axyd = ASd(2:4,1)
 Axxd = ASd(2:4,2:4)
 
 CCd = [Ayxd;Cxd]
-%L_redd=place(Axxd',CCd',3*afSortedRoots(2:4))' %NO IDEAx
-L_redd = (place(Ad',Cd',3*poles_d))'
+afpoles_d_Ld = sort(real(poles_d_Ld));
+L_redd=place(Axxd',CCd',afpoles_d_Ld(2:4))' %Probably issue here!
+%L_redd = Ld%(place(Ad',Cd',3*poles_d))'
 L_red_accd = L_redd(1:3, 1);
 L_red_not_accd = L_redd(1:3, 2);
 
@@ -200,7 +211,54 @@ Md6 = Td(1:4,1)
 Md7 = Td(1:4,2:4)   %only intrested in the x
 
 
-fGyroConversionFactor  = -1/131;
 
 
+
+%% Prefered MdX values! DON't USE LATER
+Md1x = [
+     0.1066   -0.0417    0.0156
+    -0.0561    0.9865    0.0029
+    0.5176    0.0215    0.8387
+ ]
+  Md2x = [
+     0.0355
+    -0.0048
+    -0.3641
+ ]
+  
+  Md3x = 1.0e+03 * [
+     -0.0288
+     -0.0316
+     -1.4370
+  ]
+  
+  Md4x = [
+      0.0331
+      0.0152
+      0.2480
+  ]
+  
+  Md5x = 1.0e+03 * [
+      0.0288
+      0.0316
+      1.4370
+  ]
+  
+  Md6x = [
+       1
+       0
+       0
+       0
+  ]
+  
+  Md7x = [
+       0     0     0
+       1     0     0
+       0     1     0
+       0     0     1
+  ]
+  
+%%
+clc
+Md1,Md1x
 
