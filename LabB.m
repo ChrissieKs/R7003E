@@ -129,6 +129,7 @@ M7 = T(1:4,2:4)   %only intrested in the xx part???
  
 %%
 %task 4.9
+%Use afSortedRoots =(desiredPoles) from task 4.6 NOT 4.7!
 clc
 freq = 200;
 fSamplingPeriod = 1/freq;
