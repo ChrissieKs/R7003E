@@ -150,19 +150,6 @@ Ld = (place(Ad',Cd',poles_d_Ld))'
 % :P 
 
 
-
-
-
-%%
-%testa some copy pasta från tidigare!
-
-
-%%
-%W = C1' * C1;
-%Q = rho * W;
-%R = 1;
-%[Kd, S_lqr, e_lqr] = lqr(Ad, Bd, Q, R) %SNODD KOD.....
-
 %%
 C= [1 0 0 0;0 0 1 0];
 
