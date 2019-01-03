@@ -9,6 +9,16 @@ rankcon = rank(con) %Now: Full rank in con and obs. We've controll
 rankobs = rank(obs)  
 
 
+%% Second ordert approx poles dominant
+
+rise_time = 0.55;
+w = 1.8/rise_time
+e = 0.707  %fpr 0.707  = 45 degree,some damping.
+overshoot = exp(-pi*e/(sqrt(1-e^2)))
+dom_sys = w^2/(s^2+2*e*w*s+w^2)
+%step(w^2/(s^2+2*e*w*s+w^2))
+step(dom_sys)
+dom_sys_pole = pole(dom_sys)
 %%
 %4.6
 %run LabA.m!
@@ -17,8 +27,8 @@ clc
 currentPoles = pole(G) %Move integrator and the positive pole %This is TF, might lose some poles/zeros doing like this, CAREFUL
 %desiredPoles = [currentPoles(2) -10 -15 -20] Theese work for
 %reduced....not full though...
-desiredPoles = [currentPoles(2) -4.99 -5.0 -5.01]  %high K!
-
+desiredPoles = [currentPoles(2) -4.99 -5.0 -5.01]  %POLES USED FOR REPORT!
+%desiredPoles = [currentPoles(2) -10 dom_sys_pole(1) dom_sys_pole(2)]
 %desiredPoles = [-4 currentPoles(2) -4.01 -4.02] 
 %adding a feedback K
 
@@ -34,15 +44,18 @@ desiredPoles = [currentPoles(2) -4.99 -5.0 -5.01]  %high K!
 
 %K = [0 0 0 1];
 
-K = acker(A,B,desiredPoles)
+K = acker(A,B,(desiredPoles))
 disp('from sol')
 disp([ -10.0000  -57.4908 -105.0371  -19.5009 ])
 
-afSortedRoots  = desiredPoles   %OTHER ROOTS!
+afSortedRoots  = desiredPoles;   %OTHER ROOTS!
+testSys = ss(A-B*K,B,C,D);
+eig(A-B*K)
+step(testSys)
 %%
 %task 4.7
-C1 = [5 1 9 3] %try to find some good roots from here
-
+%C1 = [5 1 9 3] %try to find some good roots from here THIS IS REPORT FINDING
+C1 =[20 10 5 1]  %THIS IS TEST
 [num den] = ss2tf(A,B,C1,D,1)  %new tf due to new C...
  %[z,p,gain ]  = ss2zp(A, B, C1, D, 1) %find all the zeros/poles!
 
@@ -61,7 +74,7 @@ axis([-10 10 -5 5])
 %more task 4.7
 %acker osv
 %clc
-rho =1;   %choose from inspection earlier!
+rho =2;   %choose from inspection earlierr
 
 % compute the roots of the SRL equation 
 afUnsortedAllRoots = rlocus( Ns*Nsmin/(Ds*Dsmin), rho );
@@ -69,10 +82,13 @@ afUnsortedAllRoots = rlocus( Ns*Nsmin/(Ds*Dsmin), rho );
 afSortedAllRoots = afUnsortedAllRoots(aiSortingIndexes);
 afSortedRoots = afSortedAllRoots(1:4)
 % compute the gains matrix for the controller K = acker(A, B, afSortedRoots);
-
 % compute the gains matrix for the controller 
 K = place(A, B, afSortedRoots)
 min(afSortedRoots)
+%%
+testSys = ss(A-B*K,B,C,D)
+eig(A-B*K)
+step(testSys)
 %%
 %task 4.8
 %full lueberge

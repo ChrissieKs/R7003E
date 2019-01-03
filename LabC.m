@@ -1,7 +1,7 @@
 %Run LabA Firstly.
 %% Task 5.1.1 Last thing to do
-freq = 200;                 %FIND BEST FREQ HERE :) 
-fSamplingPeriod = 1/freq;
+freq = 40;                 %FIND BEST FREQ HERE :) 
+fSamplingPeriod = 1/freq
 
 sys = ss(A,B,C,D)
 sys_d = c2d(sys,fSamplingPeriod,'zoh') 
@@ -10,8 +10,13 @@ Cd = [1 0 0 0;0 0 1 0];
 
 %% Task 5.2.1 Discrete LQR
 %For LQR(A,B,Q,R).. Q = C'*C*rho.... R=1 ? 
-rho = 1000;
-Q = rho*Cd'*Cd;
+%For working prototype one used W =[1 1 1 1] as i missed that part :O  and
+%rho as rho =1000 #WOW And Q = rho*Cd'*Cd; 
+
+C1 =[20 10 5 1] 
+W = C1'*C1
+rho = 2;
+Q = rho*W
 R =1;
 Kd = dlqr(Ad,Bd,Q,R)
 %For rho = 1, smallest freq = 5
@@ -20,8 +25,8 @@ Kd = dlqr(Ad,Bd,Q,R)
 %% Task 5.3.1
 %pz' = e^(x)*pz  moving poles.
 %2
-freq =200;                  
-fSamplingPeriod = 1/freq+0.00;
+%freq =20;                  
+%fSamplingPeriod = 1/freq+0.00;
 
 sys = ss(A,B,C,D)
 sys_d = c2d(sys,fSamplingPeriod,'zoh') 
